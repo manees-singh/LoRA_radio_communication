@@ -26,7 +26,7 @@ void spi_config(){
 
 
 	//configure your spi1 CPOL & CPHA, for LoRA it's mode 0
-	SPI1->CR1 &= ~(SPI_CR1_CPHA  |= SPI_CR1_CPOL);
+	SPI1->CR1 &= ~(SPI_CR1_CPHA  | SPI_CR1_CPOL);
 
 	//configure whether master or slave
 	SPI1->CR1 |= SPI_CR1_MSTR;
@@ -112,19 +112,38 @@ void cs_disable(){
 }
 
 
-void spi_transfer(){
+void spi_transfer(uint8_t data){
+	while(!(SPI1->SR & SPI_SR_TXE));
+
+
+	*(volatile uint8_t*)&SPI1->DR= data;
 
 }
 
 
 int main(void)
 {
-    /* Loop forever */
+	cs_disable();
+	spi_config();
+	gpio_config();
+	spi_enable();
+
+	while(1){
+		cs_enable();
+
+		spi_transfer(0x5A);
+		while(SPI1->SR |SPI_SR_BSY);
+		cs_disable();
+		for (volatile uint32_t i = 0; i < 100000; i++);
+}
 
 
 
 
 
 
-	for(;;);
+
+
+
+
 }
